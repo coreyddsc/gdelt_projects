@@ -1,1 +1,16 @@
 gkg_soup.py
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+__pycache__/
+*.pyc
+*.pyo
+.Python
+
+
+sql/
+mentions/
+gkg/
+events/
+gui/
+ignore/
