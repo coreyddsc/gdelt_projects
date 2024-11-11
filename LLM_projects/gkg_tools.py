@@ -253,6 +253,7 @@ class gkg_operator:
             self.article_soup = {
                 'URL': self.url,
                 'Parsed URL': self.parsed_urls[self.urls.index(url)],
+                'Titles': self.soup.title.get_text(),
                 'Headers': self.header_text,
                 'Paragraphs': self.parsed_paragraphs
             }
