@@ -41,17 +41,37 @@ class gkg_operator:
         self.gkg_query.reset_index(drop=True, inplace=True)
         self.parse_urls()
 
+    # takes a list of dates
+    # technically could be made to take a list of dates and dateranges
+    def get_gkg_dated_list(self, data=None, coverage=True):
+        """Must be a list of dates and/or date ranges
+        Ex. ['2021 Jan 01', '2021 Jan 02', ['2023 Jan 01', '2023 Jan 03']]
+        """
+        if isinstance(self.search_date, list):
+            if data is None:
+                self.gkg_query = pd.DataFrame()
+                for date in self.search_date:
+                    df = self.gdv2.Search(date=date, table='gkg', normcols = True, coverage=coverage)
+                    # add filter options here
+                    self.gkg_query = pd.concat([self.gkg_query, df], ignore_index=True)
+            else:
+                pass
 
-    def gkg_persons(self, persons):
+    def gkg_filter(self, column = None, values = None):
         df = self.gkg_query.copy()
-        df.dropna(subset=['v2persons'], inplace=True)
-        if isinstance(persons, list):
-            # format to regex or expression
-            persons = '|'.join(persons)
-        
-        df = df[df['v2persons'].str.contains(persons, case=False)]
-        return df
-    
+        if column is None or values is None:
+            print('Please provide a column and values to filter by')
+            return
+        elif column is not None and isinstance(values, list):
+            df.dropna(subset=[column], inplace=True)
+            values = '|'.join(values)
+            filtered_df = df[df[column].str.contains(values, case=False)]
+            filtered_df.reset_index(drop=True, inplace=True)
+            self.filtered_df = filtered_df
+            return filtered_df
+        else:
+            print('Please provide a list of values to filter by')
+            return
 
     def parse_urls(self):
         self.urls = self.gkg_query['documentidentifier'].tolist()
@@ -110,33 +130,102 @@ class gkg_operator:
         self.field_tokens = field_tokens
         return self.field_tokens
 
-
-    def vectorize_field(self):
+    def vectorize_field(self, weight='boolean'):
         df = self.parsed_fields_df.copy()
-        # if col name contains 'amounts' set col_idx to 2, otherwise set to 1
-        if self.parsed_field_name == 'amounts':
-            col_idx = 2
-        else:
-            col_idx = 1
-        # change dtype object to float
+        
+        # Set the column index based on the field name
+        col_idx = 2 if self.parsed_field_name == 'amounts' else 1
+        
+        # Change data type to float where possible and convert the selected column to lowercase
         df = df.apply(pd.to_numeric, errors='ignore')
-        df.iloc[:,col_idx] = df.iloc[:,col_idx].astype(str).str.lower()
-        ## remove all non [0-9] and [a-z] characters except for whitespace
-        df.iloc[:,col_idx] = df.iloc[:,col_idx].str.replace(r'[^a-z0-9\s]', '', regex=True)
-        # get field tokens
-        self.tokenize_field(data=df,col_idx=col_idx)
-        # initialize a new dataframe
+        df.iloc[:, col_idx] = df.iloc[:, col_idx].astype(str).str.lower()
+        
+        # Remove non-alphanumeric characters except for whitespace
+        df.iloc[:, col_idx] = df.iloc[:, col_idx].str.replace(r'[^a-z0-9\s]', '', regex=True)
+        
+        # Tokenize the field
+        self.tokenize_field(data=df, col_idx=col_idx)
+        
+        # Initialize an empty DataFrame for the vectorized data
         rows = self.gkg_query.shape[0]
         vectorized_df = pd.DataFrame(np.zeros((rows, len(self.field_tokens))), columns=self.field_tokens)
-        #using a group by is faster than the loop above.
-        df['token'] = df.iloc[:, col_idx]  # Use `col_idx` to get tokens from df into a new 'token' column
-        # Use groupby to count occurrences of each token for each index
+        
+        # Add tokens to a new 'token' column and group by index and token
+        df['token'] = df.iloc[:, col_idx]
         counted_tokens = df.groupby(['index', 'token']).size().unstack(fill_value=0)
-        # Align counted tokens DataFrame with vectorized_df by reindexing
+        
+        # Align counted tokens with vectorized_df
         aligned_tokens = vectorized_df.reindex(counted_tokens.index).fillna(0) + counted_tokens.reindex_like(vectorized_df).fillna(0)
-        # Replace vectorized_df with the result, or create a new DataFrame if preferred
+        
+        if weight == 'weighted':
+            # Apply weighted transformation (e.g., TF-IDF, normalization, or another weighting method)
+            # For illustration, assume each token count is multiplied by a custom weight function `get_weight`
+            def get_weight(token_count):
+                # Define a weighting mechanism (this is a placeholder)
+                return np.log1p(token_count)  # Example: log scaling as a simple weighting
+
+            aligned_tokens = aligned_tokens.applymap(get_weight)  # Apply weighting function to each token count
+        
+        # Update or replace vectorized_df with aligned_tokens
         vectorized_df.update(aligned_tokens)
         self.vectorized_df = vectorized_df
+
+    def get_fields_stats(self, weight='boolean'):
+        # First, call vectorize_field to populate self.vectorized_df
+        if self.vectorized_df is None:
+            self.vectorize_field(weight=weight)
+        
+        # Calculate non-zero float percentages
+        non_zero = (self.vectorized_df.astype(bool).sum(axis=0) / self.vectorized_df.shape[0]) * 100
+        non_zero = non_zero[non_zero > 0]
+        non_zero.sort_values(ascending=False, inplace=True)
+        non_zero_top_10 = non_zero[:10]
+        
+        # Calculate average weighted values if weight is 'weighted'
+        if weight == 'weighted':
+            mean_weighted_values = self.vectorized_df[self.vectorized_df != 0].mean()
+            mean_weighted_values = mean_weighted_values[mean_weighted_values > 0]
+            mean_weighted_values.sort_values(ascending=False, inplace=True)
+            mean_weighted_top_10 = mean_weighted_values[:10]
+        else:
+            mean_weighted_top_10 = None
+        
+        # Print the results in a table format
+        print("Top 10 Tokens by Non-Zero Percentage")
+        print(non_zero_top_10.to_frame(name="Non-Zero Percentage"))
+        
+        if mean_weighted_top_10 is not None:
+            print("\nTop 10 Tokens by Mean Weighted Value")
+            print(mean_weighted_top_10.to_frame(name="Mean Weighted Value"))
+
+
+
+    # def vectorize_field(self, weight = 'boolean'):
+    #     df = self.parsed_fields_df.copy()
+    #     # if col name contains 'amounts' set col_idx to 2, otherwise set to 1
+    #     if self.parsed_field_name == 'amounts':
+    #         col_idx = 2
+    #     else:
+    #         col_idx = 1
+    #     # change dtype object to float
+    #     df = df.apply(pd.to_numeric, errors='ignore')
+    #     df.iloc[:,col_idx] = df.iloc[:,col_idx].astype(str).str.lower()
+    #     ## remove all non [0-9] and [a-z] characters except for whitespace
+    #     df.iloc[:,col_idx] = df.iloc[:,col_idx].str.replace(r'[^a-z0-9\s]', '', regex=True)
+    #     # get field tokens
+    #     self.tokenize_field(data=df,col_idx=col_idx)
+    #     # initialize a new dataframe
+    #     rows = self.gkg_query.shape[0]
+    #     vectorized_df = pd.DataFrame(np.zeros((rows, len(self.field_tokens))), columns=self.field_tokens)
+    #     #using a group by is faster than the loop above.
+    #     df['token'] = df.iloc[:, col_idx]  # Use `col_idx` to get tokens from df into a new 'token' column
+    #     # Use groupby to count occurrences of each token for each index
+    #     counted_tokens = df.groupby(['index', 'token']).size().unstack(fill_value=0)
+    #     # Align counted tokens DataFrame with vectorized_df by reindexing
+    #     aligned_tokens = vectorized_df.reindex(counted_tokens.index).fillna(0) + counted_tokens.reindex_like(vectorized_df).fillna(0)
+    #     # Replace vectorized_df with the result, or create a new DataFrame if preferred
+    #     vectorized_df.update(aligned_tokens)
+    #     self.vectorized_df = vectorized_df
 
 
     #####################################
@@ -151,18 +240,19 @@ class gkg_operator:
         adapter = HTTPAdapter(max_retries=retry)
         self.session.mount('http://', adapter)
         self.session.mount('https://', adapter)
-
-
-    # get the soup object
-    def get_gkg_soup(self, url, verbose=False):
+                
+    # get the soup object with a timeout
+    def get_gkg_soup(self, url, verbose=False, timeout=10):
         try:
-            response = self.session.get(url, headers=self.headers)
+            response = self.session.get(url, headers=self.headers, timeout=timeout)
             response.raise_for_status()
             self.soup = BeautifulSoup(response.content, 'html.parser')
             if verbose:
-                print(f'Title: {self.soup.title.get_text()}') # test print of title
+                print(f'Title: {self.soup.title.get_text()}')  # test print of title
+        except requests.exceptions.Timeout:
+            print("Request timed out.")
         except requests.exceptions.RequestException as e:
-                print(f"Error: {e}")
+            print(f"Error: {e}")
 
 
     def get_headers(self, verbose=False):
@@ -234,7 +324,14 @@ class gkg_operator:
         if verbose:
             print('\n')
 
-    
+    def get_title(self, url, verbose=False):
+        self.url = url
+        self.get_gkg_soup(url, verbose=verbose)
+        self.title = self.soup.title.get_text()
+        if verbose:
+            print(self.title)
+        return self.title
+        
     def get_all_soup(self, limit_output=5, verbose=False):
         """
         Note: This function will parse the soup for all urls in self.urls, which can be a large number.
