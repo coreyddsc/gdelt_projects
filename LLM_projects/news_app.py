@@ -3,12 +3,12 @@ from dash import Dash, html, Input, Output, State, callback_context, dcc
 from dash.exceptions import PreventUpdate  # Import PreventUpdate
 
 import dash_bootstrap_components as dbc
-from gkg_tools import *
+from utils.gkg_tools import *
 
 # Set up the GKG operator to use gkg_tools
 gkg = gkg_operator() # create a gkg operator
 # manga = pd.read_csv('.\\LLM_projects\\manga_soup_labeled.csv')
-manga = pd.read_csv('manga_soup_labeled.csv')
+manga = pd.read_csv('data\\manga_soup_labeled.csv')
 manga = manga[manga['sourcecommonname'].map(manga['sourcecommonname'].value_counts()) > 5]
 manga = manga[manga['sharingimage'].notnull()]
 gkg.get_gkg(data=manga) # stores in gkg.gkg_query as a dataframe
@@ -16,9 +16,9 @@ gkg.parse_urls()
 v2tone = gkg.parse_gkg_field('v2tone')
 print(v2tone['Word Count'])
 print(gkg.gkg_query.columns)
-gkg.parse_gkg_field('allnames')
-gkg.vectorize_field(weight='weighted')
-gkg.get_fields_stats(weight='weighted')
+# gkg.parse_gkg_field('allnames')
+# gkg.vectorize_field(weight='weighted')
+# gkg.get_fields_stats(weight='weighted')
 gkg.parse_gkg_soup(url=gkg.urls[0],verbose=True)
 
 # Sample images for the grid from manga sharingimage for rows in manga.
@@ -86,6 +86,9 @@ app.layout = html.Div(
         dcc.Store(id="n_clicks_store", data=[0] * len(images)),  # Store for previous n_clicks
     ]
 )
+
+
+
 
 @app.callback(
     [
