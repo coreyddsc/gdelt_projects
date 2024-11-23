@@ -134,12 +134,12 @@ h1.dashboard-title {
 
 /* Close button styling */
 #image-modal .btn-close {
-    margin-left: auto;
+    /* margin-left: auto;
     color: black;
     font-size: 1.5rem;
     background: none;
     border: none;
-    cursor: pointer;
+    cursor: pointer; */
 }
 
 #image-modal body.modal-open {
