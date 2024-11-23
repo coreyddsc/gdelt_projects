@@ -7,11 +7,19 @@ from gkg_tools import *
 
 # Set up the GKG operator to use gkg_tools
 gkg = gkg_operator() # create a gkg operator
+# manga = pd.read_csv('.\\LLM_projects\\manga_soup_labeled.csv')
 manga = pd.read_csv('manga_soup_labeled.csv')
 manga = manga[manga['sourcecommonname'].map(manga['sourcecommonname'].value_counts()) > 5]
 manga = manga[manga['sharingimage'].notnull()]
 gkg.get_gkg(data=manga) # stores in gkg.gkg_query as a dataframe
 gkg.parse_urls()
+v2tone = gkg.parse_gkg_field('v2tone')
+print(v2tone['Word Count'])
+print(gkg.gkg_query.columns)
+gkg.parse_gkg_field('allnames')
+gkg.vectorize_field(weight='weighted')
+gkg.get_fields_stats(weight='weighted')
+gkg.parse_gkg_soup(url=gkg.urls[0],verbose=True)
 
 # Sample images for the grid from manga sharingimage for rows in manga.
 # manga is stored in gkg.gkg_query
@@ -20,6 +28,7 @@ images = [
     for _, row in gkg.gkg_query.iterrows()
 ]
 
+
 # Initialize the app
 app = dash.Dash(__name__)
 app.layout = html.Div(
@@ -27,17 +36,28 @@ app.layout = html.Div(
         # App title
         html.H1(
             "ONE PIECE NEWS DASHBOARD!",
-            style={'color': 'white', 'textAlign': 'center', 'font-size': '125px'}
+            className="dashboard-title",
+            # style={'color': 'white', 'textAlign': 'center', 'font-size': '125px'}
         ),
         # Grid container for images
+        # Update the image grid with titles
         html.Div(
             id="image-grid",
             children=[
-                html.Img(
-                    src=image["src"],
-                    alt=image["alt"],
-                    className="grid-item",
-                    id=f"img-{index}",  # Unique ID for each image
+                html.Div(
+                    className="image-container",  # Container for image and title
+                    children=[
+                        html.Img(
+                            src=image["src"],
+                            alt=image["alt"],
+                            className="grid-item",
+                            id=f"img-{index}",  # Unique ID for each image
+                        ),
+                        html.Div(
+                            className="image-title",  # Title text overlay
+                            children=image["alt"],  # Use the title text
+                        ),
+                    ],
                 )
                 for index, image in enumerate(images)
             ],
@@ -51,14 +71,14 @@ app.layout = html.Div(
                         "×",  # Close button text
                         id="close-modal-btn",  # ID for callback
                         className="btn-close",  # Apply optional CSS
-                        style={"margin-right": "auto", "color": "black"},  # Inline styling
+                        style={"margin-left": "auto", "color": "black", "display":"flex"},  # Inline styling
                     ), # Show close button
-                    ),  # Hide the footer
+                ), # Modal footer
             ],
             id="image-modal",
             scrollable=True,  # Allow modal to scroll
             is_open=False,  # Modal starts closed
-            size="lg",
+            size="xl",
             backdrop="static",  # Disable clicking outside of modal to close
             autoFocus=True,  # Auto focus on modal
             centered=True,  # Center the modal
@@ -108,14 +128,20 @@ def toggle_or_close_modal(*args):
         clicked_index = int(triggered_id.split("-")[1])  # Extract index
         print(f"Image {clicked_index} clicked")
 
-        # Update Modal Content and Open Modal
-        return True, html.Div([
+        # Use gkg tools to parse the soup of the clicked image url
+        gkg.parse_gkg_soup(url=gkg.urls[clicked_index],verbose=True)
+        # Modal Content
+        model_content = html.Div([
             dbc.ModalTitle(
                 f"{images[clicked_index]['alt']}",
                 style={"color": "black", "textAlign": "center", 'font-size': '55px'}
             ),
             html.Img(src=images[clicked_index]['src'], style={"maxWidth": "100%"}),
-        ]), n_clicks_new
+            # Create a parent container for the paragraphs
+            html.Div([html.P(par) for par in gkg.parsed_paragraphs], style={"margin-top": "20px"})
+        ])
+        # Update Modal Content and Open Modal
+        return True, model_content, n_clicks_new
 
     # If no valid trigger, prevent update
     print("No valid trigger detected, preventing update.")

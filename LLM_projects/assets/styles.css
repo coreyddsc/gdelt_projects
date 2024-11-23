@@ -22,6 +22,53 @@ h1, h2, h3 {
     font-family: 'OnePieceFont', serif;
 }
 
+/* styles.css */
+h1.dashboard-title {
+    color: white;
+    text-align: center;
+    font-size: 125px;
+    margin-top: 10px; /* Adjust as needed */
+    margin-bottom: 10px; /* Adjust as needed */
+    line-height: 1.2; /* Adjust vertical spacing within the title */
+    padding: 0; /* Ensure no extra padding is applied */
+}
+
+
+/* Image container to hold image and title */
+.image-container {
+    position: relative;  /* Enables title to be positioned over the image */
+    width: 400px;        /* Match image width */
+    height: 300px;       /* Match image height */
+    margin: 5px;         /* Space between grid items */
+    overflow: hidden;    /* Ensure content doesn't spill outside the container */
+}
+
+/* Image styling */
+.image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;  /* Ensure the image covers the container without distortion */
+    border-radius: 10px; /* Optional: Rounded corners */
+}
+
+/* Title styling: Overlay directly on the image */
+.image-title {
+    position: absolute;       /* Overlay positioning */
+    top: 80%;                 /* Center vertically */
+    left: 50%;                /* Center horizontally */
+    width: 95%;               /* 90% width for better readability */
+    transform: translate(-50%, -50%); /* Adjust for perfect centering */
+    font-size: 1.5rem;        /* Adjust font size for readability */
+    font-family: 'OnePieceFont', serif; /* Use your custom font */
+    color: white;             /* Text color for contrast */
+    background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent black background for readability */
+    padding: 5px 10px;        /* Padding around text for better spacing */
+    border-radius: 5px;       /* Rounded corners for the text background */
+    text-align: left;       /* Center-align the text */
+    z-index: 2;               /* Ensure it’s above the image */
+    pointer-events: none;     /* Ensure the title doesn’t interfere with clicks on the image */
+}
+
 
 /*Image Grid*/
 #image-grid {
@@ -34,6 +81,8 @@ h1, h2, h3 {
     align-items: center; /* Align grid items vertically */
     max-width: 90%; /* Optional: Restrict the grid width */
 }
+
+
 #image-grid .grid-item {
     cursor: pointer; /* Make images clickable */
     width: 400px; /* Uniform width for images */
@@ -49,8 +98,8 @@ h1, h2, h3 {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 60%;
-    max-width: 90%;
+    width: 80%;
+    max-width: 95%;
     height: 80%;
     z-index: 2050;
     border-radius: 15px;
@@ -66,12 +115,19 @@ h1, h2, h3 {
     overflow-y: auto;  /* Enable vertical scrolling */
 }
 
+#image-modal .modal-title {
+    font-size: 2rem;  /* Larger title */
+    font-family: "OnePieceFont", serif;  /* Use custom font */
+}
+
 #image-modal .modal-header {
     text-align: center;  /* Center the title */
+    font-family: "OnePieceFont", serif;  /* Use custom font */
 }
 
 #image-modal .modal-body {
     font-size: 1.5rem;  /*Larger text size */
+    font-family: sans-serif;
     overflow-y: auto; /* Enable vertical scrolling */
     flex-grow: 1; /* Allow body to grow and take available space */
 }
@@ -84,4 +140,9 @@ h1, h2, h3 {
     background: none;
     border: none;
     cursor: pointer;
+}
+
+#image-modal body.modal-open {
+    overflow: hidden;
+    width: 100%;
 }
