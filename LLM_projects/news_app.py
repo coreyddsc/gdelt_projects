@@ -5,6 +5,7 @@ from dash.exceptions import PreventUpdate  # Import PreventUpdate
 import dash_bootstrap_components as dbc
 from tools.gkg_tools import * # Import the gkg_operator class for gdelt gkg data processing
 from components.main_modal import * # Import the main_modal_callbacks function and image grid layout
+from components.image_grid import * # Import the image grid layout
 
 
 # Set up the GKG operator to use gkg_tools
@@ -20,6 +21,8 @@ gkg.parse_urls()
 
 # app setup
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], suppress_callback_exceptions=True)
+
+# allow all layout and callback functions to access the app object
 app.manga = manga.copy()
 app.gkg = gkg
 app.images = [
