@@ -1,0 +1,48 @@
+cookie:
+  expiry_days: 30
+  key: some_signature_key
+  name: some_cookie_name
+credentials:
+  usernames:
+    jsmith:
+      email: jsmith@gmail.com
+      failed_login_attempts: 0
+      first_name: John
+      last_name: Smith
+      logged_in: false
+      password: $2b$12$EY1Vpo2h3PTFtwz3xxccuOWflWmsBupZFxv.kWhftFzlk49KUJj2e
+      roles:
+      - super-admin
+      - admin
+      - editor
+      - viewer
+      - user
+    monkey:
+      email: test@gmail.com
+      logged_in: false
+      password: $2b$12$vqSjHzn72KjmfIcXClvf3uLVxVRwuPVJ6CBMm7TXCxW9kqAl28fp.
+      roles:
+      - user
+    rbriggs:
+      email: rbriggs@gmail.com
+      failed_login_attempts: 0
+      first_name: Rebecca
+      last_name: Briggs
+      logged_in: false
+      password: $2b$12$nVCoc6nmxJDRDYjmVXc0Eesn5TYAD3k5UfGbhYkelDjOhsArhgvMO
+      roles:
+      - user
+      - viewer
+oauth2:
+  google:
+    client_id: null
+    client_secret: null
+    redirect_uri: null
+  microsoft:
+    client_id: null
+    client_secret: null
+    redirect_uri: null
+    tenant_id: null
+pre-authorized:
+  emails:
+  - melsby@gmail.com
