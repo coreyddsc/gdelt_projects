@@ -57,7 +57,38 @@ def sidebar(app):
         ],
         id="sidebar-wrapper",
     )
+    
+    
 
+def navigation_icon(app):
+    # SVG button in the top-left corner
+    app.navigation_icon = html.Div(
+        children=[
+            html.Button(
+                children=[
+                    html.ObjectEl(
+                        type="image/svg+xml",
+                        data="/assets/extracted_region.png",  # Reference to the SVG in the assets folder
+                        width="150px",  # Adjust width as necessary
+                        height="150px",  # Adjust height as necessary
+                    )
+                ],
+                id="svg-button",  # Optional ID for the button
+                style={
+                    "position": "fixed",
+                    "top": "20px",  # Adjust the top margin to position the button
+                    "left": "20px",  # Adjust the left margin to position the button
+                    "border": "none",
+                    "background": "transparent",
+                    "cursor": "pointer",
+                    "z-index": "9999",  # Bring to the front by setting a high z-index
+                    # "box-shadow": "4px 4px 10px rgba(0, 0, 0, 0.3)",  # Shadow effect
+                },
+                n_clicks=0  # This tracks the number of clicks, if needed
+            )
+        ]
+    )
+    return app.navigation_icon
 
 
 # Define the callback to toggle the sidebar (no longer needed as the sidebar already has the collapsible feature)

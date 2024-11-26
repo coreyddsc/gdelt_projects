@@ -190,3 +190,25 @@ def login_route(app):
                 error_message = "Invalid username or password."
 
         return render_template('login.html', error_message=error_message)
+
+
+def logout_button(app):
+    logout = html.Div(
+        [
+            html.Button("Logout", id="logout", n_clicks=0),
+            dcc.Location(id="redirect", refresh=True),
+        ],
+        style={
+            'position': 'absolute',
+            'top': '20px',
+            'right': '20px',
+            'zIndex': 1001,  # Ensure it's above other content
+            'background': 'white',
+            'border': 'none',
+            'padding': '2.5px',
+            'cursor': 'pointer',
+            'border-radius': '2px',
+            'button-radius': '10px',
+        }
+    )
+    return logout    

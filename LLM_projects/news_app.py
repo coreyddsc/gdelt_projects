@@ -28,6 +28,10 @@ gkg.parse_urls()
 # app setup
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"], suppress_callback_exceptions=True)
 
+app.title = "One Piece News Dashboard"
+print([d for d in dir(app)])
+
+
 # access the underlying Flask server
 access_flask_server(app)
 # Add login route to the app
@@ -43,27 +47,7 @@ app.images = [
     for _, row in app.gkg.gkg_query.iterrows()
 ]
 
-
-logout = html.Div(
-    [
-        html.Button("Logout", id="logout", n_clicks=0),
-        dcc.Location(id="redirect", refresh=True),
-    ],
-    style={
-        'position': 'absolute',
-        'top': '20px',
-        'right': '20px',
-        'zIndex': 1001,  # Ensure it's above other content
-        'background': 'white',
-        'border': 'none',
-        'padding': '2.5px',
-        'cursor': 'pointer',
-        'border-radius': '2px',
-        'button-radius': '10px',
-    }
-)
-
-
+# Main layout
 app.layout = html.Div(
     children=[
         html.H1(
@@ -76,14 +60,15 @@ app.layout = html.Div(
         image_grid(app),
         # Modal for displaying image details
         main_modal(app),
-        sidebar(app),
-        logout,
+        # sidebar(app),
+        navigation_icon(app),
+        logout_button(app),
     ]
 )
 
 
 main_modal_callbacks(app)
-sidebar_callbacks(app)
+# sidebar_callbacks(app)
 # Add the logout callback
 handle_logout(app)
 
@@ -93,7 +78,8 @@ handle_logout(app)
 # Test the gkg operator
 # print(f"Test using app.gkg: {app.gkg.parse_gkg_field('v2tone')}")
 
-print(app.menu_items)
+# print(app.menu_items)
+
 
 # Run the app
 if __name__ == '__main__':
