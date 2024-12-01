@@ -154,3 +154,16 @@ h1.dashboard-title {
     font-size: 46px; /* Adjust the font size for the heading */
     align-items: center;/* Center Text*/
 }
+
+
+/*THREE JS CONTAINER*/
+#threejs-container {
+    position: absolute; /* Ensures it can be layered */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2000; /* Ensures it's on top of other elements */
+    pointer-events: none; /* Optional: Allows clicks to pass through */
+    background-color: transparent; /* Ensures no background interference */
+}
