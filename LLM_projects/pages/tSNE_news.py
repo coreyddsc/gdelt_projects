@@ -48,20 +48,23 @@ def tSNE_model(app):
         # hover_data={'SourceImage': True, 'Label':True},  # Hide the image URL
         labels={'TSNE1': 't-SNE Dimension 1', 'TSNE2': 't-SNE Dimension 2', 'TSNE3': 't-SNE Dimension 3'},
     )
-     
-
+        
     # Customize the layout for a transparent background and wireframe
     app.tsne_fig.update_layout(
         scene=dict(
             xaxis=dict(
                 title='t-SNE Dimension 1',
-                showgrid=True,    # Keep the wireframe grid
-                showline=False,   # Remove axis lines
-                zeroline=False,   # Hide the origin line
-                backgroundcolor="rgba(0, 0, 0, 0)",  # Transparent
+                title_font=dict(color='white'),  # Change axis title to white
+                tickfont=dict(color='white'),    # Change tick labels to white
+                showgrid=True,                  # Keep the wireframe grid
+                showline=False,                 # Remove axis lines
+                zeroline=False,                 # Hide the origin line
+                backgroundcolor="rgba(0, 0, 0, 0)",  # Transparent background
             ),
             yaxis=dict(
                 title='t-SNE Dimension 2',
+                title_font=dict(color='white'),  # Change axis title to white
+                tickfont=dict(color='white'),    # Change tick labels to white
                 showgrid=True,
                 showline=False,
                 zeroline=False,
@@ -69,6 +72,8 @@ def tSNE_model(app):
             ),
             zaxis=dict(
                 title='t-SNE Dimension 3',
+                title_font=dict(color='white'),  # Change axis title to white
+                tickfont=dict(color='white'),    # Change tick labels to white
                 showgrid=True,
                 showline=False,
                 zeroline=False,
@@ -77,8 +82,14 @@ def tSNE_model(app):
             bgcolor="rgba(0, 0, 0, 0)",  # Transparent background for the scene
         ),
         paper_bgcolor="rgba(0, 0, 0, 0)",  # Transparent background for the entire figure
+        legend=dict(
+            font=dict(color='white')  # Change legend label color to white
+        )
     )
 
+
+
+# Define the layout for the tSNE page
 def tSNE_layout(app):
     # Run the tSNE model
     tSNE_model(app)
@@ -114,16 +125,22 @@ def tSNE_layout(app):
             html.Div(id="tSNE-content",
                     className="tSNE-content",
                     children=[
-                        html.Div(id="tSNE-graph"),
-                        # table to display the tSNE results
+                        html.Div(id="tSNE-graph",
+                                 className="tSNE-graph",
+                                 children=[
+                                    # show the tSNE figure
+                                    dcc.Graph(id='tsne-3d-graph',
+                                            figure=app.tsne_fig,
+                                            style={'height': '100vh'}
+                                    ),
+                                 ]
+                        ),
                         
-                        # show the tSNE figure
-                        dcc.Graph(id='tsne-3d-graph',
-                                figure=app.tsne_fig,
-                                style={'height': '100vh'}),
-                        tsne_table,
-                        modal,
-                    ]),
+                        
+                    ]
+            ),
+            # tsne_table,
+            modal,
         ]
     )
     return tSNE_layout
