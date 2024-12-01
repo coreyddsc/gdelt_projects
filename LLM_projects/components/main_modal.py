@@ -2,6 +2,7 @@ import dash
 from dash import Dash, html, Input, Output, State, callback_context, dcc
 from dash.exceptions import PreventUpdate  # Import PreventUpdate
 import dash_bootstrap_components as dbc
+import json
 
 def main_modal(app):
     # Modal for displaying image details
@@ -44,6 +45,20 @@ def summarize_text_via_backend(text):
                 return f"Failed to connect to the backend. Error: {e}"
         return "Enter text and click Summarize to process."
 
+def extract_summary(input_text):
+    # Find the start of the JSON part (it starts after the path and space)
+    json_start = input_text.find("{")
+    
+    # Extract the JSON string from the input text
+    json_string = input_text[json_start:]
+    
+    # Convert the JSON string to a dictionary
+    try:
+        summary_dict = json.loads(json_string)
+        return summary_dict
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON: {e}")
+        return None
 
 def main_modal_callbacks(app):
     # Callback to toggle or close the modal
@@ -95,9 +110,13 @@ def main_modal_callbacks(app):
             if app.ssh_connection_status:
                 article_text = " ".join(app.gkg.parsed_paragraphs)
                 summary_text = summarize_text_via_backend(article_text)
+                # Extract the summary dictionary
+                summary_dict = extract_summary(summary_text)
                 print(f"Summary: {summary_text}")
             else:
                 summary_text = "Please connect to the SSH server to summarize the article."
+                summary_dict = {"summary": summary_text}
+                
             
             # Modal Content
             model_content = html.Div([
@@ -105,12 +124,13 @@ def main_modal_callbacks(app):
                     f"{app.images[clicked_index]['alt']}",
                     style={"color": "black", "textAlign": "center", 'font-size': '55px'}
                 ),
+                dcc.Markdown("---"),  # break line
                 html.Img(src=app.images[clicked_index]['src'], style={"maxWidth": "100%"}),
                 dcc.Markdown("---"),  # break line
                 # Create a container for the summary
                 html.Div([
                     html.H2("Summary", style={"margin-top": "20px","color": "black", "textAlign": "center", 'font-size': '45px'}),
-                    html.P(summary_text)
+                    html.P(summary_dict['summary']),
                 ]),
                 dcc.Markdown("---"),  # break line
                 # Create a parent container for the paragraphs
@@ -118,7 +138,7 @@ def main_modal_callbacks(app):
                     html.H2("Article", style={"margin-top": "20px","color": "black", "textAlign": "center", 'font-size': '45px'}),
                 ]),
                 html.Div(
-                    [html.P(par) for par in app.gkg.parsed_paragraphs],style={"margin-top": "20px"})
+                    [html.P(par) for par in app.gkg.parsed_paragraphs])
             ])
             # Update Modal Content and Open Modal
             return True, model_content, n_clicks_new

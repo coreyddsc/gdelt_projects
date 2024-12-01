@@ -89,7 +89,7 @@ def display_page(pathname):
 
 main_modal_callbacks(app)
 ssh_connection(app)
-# Add the logout callback
+tSNE_scatter_modal(app)
 handle_logout(app)
 
 # callback for updating the modal content
