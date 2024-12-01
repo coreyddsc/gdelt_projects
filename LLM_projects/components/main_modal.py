@@ -28,6 +28,23 @@ def main_modal(app):
             )
     return main_modal
 
+
+def summarize_text_via_backend(text):
+        if text:
+            import requests
+            try:
+                # Send text to Flask backend
+                response = requests.post("http://127.0.0.1:8053/summarize", json={"text": text})
+                if response.status_code == 200:
+                    data = response.json()
+                    return f"Summary result:\n{data.get('result', 'No result received')}"
+                else:
+                    return f"Error: {response.status_code} - {response.text}"
+            except Exception as e:
+                return f"Failed to connect to the backend. Error: {e}"
+        return "Enter text and click Summarize to process."
+
+
 def main_modal_callbacks(app):
     # Callback to toggle or close the modal
     @app.callback(
@@ -73,6 +90,15 @@ def main_modal_callbacks(app):
 
             # Use gkg tools to parse the soup of the clicked image url
             app.gkg.parse_gkg_soup(url=app.gkg.urls[clicked_index],verbose=True)
+            
+            # paste together the paragraphs into a single string
+            if app.ssh_connection_status:
+                article_text = " ".join(app.gkg.parsed_paragraphs)
+                summary_text = summarize_text_via_backend(article_text)
+                print(f"Summary: {summary_text}")
+            else:
+                summary_text = "Please connect to the SSH server to summarize the article."
+            
             # Modal Content
             model_content = html.Div([
                 dbc.ModalTitle(
@@ -80,8 +106,19 @@ def main_modal_callbacks(app):
                     style={"color": "black", "textAlign": "center", 'font-size': '55px'}
                 ),
                 html.Img(src=app.images[clicked_index]['src'], style={"maxWidth": "100%"}),
+                dcc.Markdown("---"),  # break line
+                # Create a container for the summary
+                html.Div([
+                    html.H2("Summary", style={"margin-top": "20px","color": "black", "textAlign": "center", 'font-size': '45px'}),
+                    html.P(summary_text)
+                ]),
+                dcc.Markdown("---"),  # break line
                 # Create a parent container for the paragraphs
-                html.Div([html.P(par) for par in app.gkg.parsed_paragraphs], style={"margin-top": "20px"})
+                html.Div([
+                    html.H2("Article", style={"margin-top": "20px","color": "black", "textAlign": "center", 'font-size': '45px'}),
+                ]),
+                html.Div(
+                    [html.P(par) for par in app.gkg.parsed_paragraphs],style={"margin-top": "20px"})
             ])
             # Update Modal Content and Open Modal
             return True, model_content, n_clicks_new

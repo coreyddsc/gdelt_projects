@@ -133,18 +133,24 @@ h1.dashboard-title {
     background-color: rgba(255, 255, 255, 0.8);  /* Slightly opaque */
 }
 
-/* Close button styling */
-/* #image-modal .btn-close { */
-    /* margin-left: auto;
-    color: black;
-    font-size: 1.5rem;
-    background: none;
-    border: none;
-    cursor: pointer; */
-/* } */
 
 #image-modal body.modal-open {
     overflow: hidden;
     width: 100%;
 }
 
+
+/*OFF CANVAS NAV SIDE BAR*/
+#offcanvas-nav {
+    width: 15%; /* 15% of the viewport width */
+    z-index: 3001; /* Bring to the front by setting a high z-index */
+    font-size: 16px;
+}
+#offcanvas-nav .nav-link {
+    font-size: 20px; /* Adjust the font size specifically for navigation links */
+}
+
+#offcanvas-nav h3 {
+    font-size: 46px; /* Adjust the font size for the heading */
+    align-items: center;/* Center Text*/
+}

@@ -2,10 +2,13 @@ import dash
 from dash import dcc, html, Output, Input
 import yaml
 import bcrypt
-from flask import Flask, request, redirect, url_for, render_template
+from flask import Flask, request, redirect, url_for, render_template, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_dance.contrib.google import make_google_blueprint, google
 # from flask_dance.contrib.microsoft import make_microsoft_blueprint, microsoft
+
+from tools.ssh_tunnel import *
+import shlex
 
 # Hash function
 def hash_password(password):
@@ -198,17 +201,42 @@ def logout_button(app):
             html.Button("Logout", id="logout", n_clicks=0),
             dcc.Location(id="redirect", refresh=True),
         ],
-        style={
-            'position': 'absolute',
-            'top': '20px',
-            'right': '20px',
-            'zIndex': 1001,  # Ensure it's above other content
-            'background': 'white',
-            'border': 'none',
-            'padding': '2.5px',
-            'cursor': 'pointer',
-            'border-radius': '2px',
-            'button-radius': '10px',
-        }
     )
-    return logout    
+    return logout
+
+
+# SSH Server Route
+def ssh_server_route(app):
+    @app.server.route('/summarize', methods=['POST'])
+    def summarize_text():
+        data = request.json
+        text = data.get("text", "")
+
+        if text:
+            try:
+                # Safely escape the text to avoid issues with quotes and special characters
+                safe_text = text.replace("'", "\\'").replace("\n", "\\n").replace("\r", "\\r")
+                
+                # Save the sanitized text to a temporary file on the remote server
+                remote_input_file = "/tmp/input_text.txt"
+                app.ssh_connection.execute_command(f"echo \"{safe_text}\" > {remote_input_file}")
+
+                # Safely escape the text to avoid breaking the shell command
+                escaped_text = shlex.quote(safe_text)  # This will ensure that the text is safely quoted
+
+                # Command to execute the summarization script remotely
+                # Create the command to execute the Python script remotely, passing the input via stdin
+                command = f"echo {escaped_text} | /opt/anaconda3/bin/python3 scripts/summarize_script.py"
+
+                output = app.ssh_connection.execute_command(command)
+
+                # Assuming the output is the summary, handle parsing it correctly
+                summary = output.strip()  # Depending on your script output, this might need adjustment
+
+                # Return the summary as a JSON response
+                return jsonify({"result": summary})
+
+            except Exception as e:
+                return jsonify({"error": f"Summarization failed: {e}"})
+
+        return jsonify({"error": "No text provided"})    
