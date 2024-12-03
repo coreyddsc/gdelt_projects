@@ -50,7 +50,7 @@ def off_canvas_nav(app):
                     dbc.NavLink("About", href="/about", active="exact"),
                     dbc.NavLink("Contact", href="/contact_info", active="exact"),
                     dcc.Markdown("---"),  # break line
-                    html.H5("SSH Activation Panel"),  # SSH activation panel title
+                    html.H3("SSH Activation Panel", className='mb-3'),  # SSH activation panel title
                     dcc.Input(id="ssh-host", type="text", placeholder="lambda2.uncw.edu"),  # Input field for host
                     dcc.Input(id="ssh-user", type="text", placeholder="username"),  # Input field for username
                     dcc.Input(id="ssh-password", type="password", placeholder="password"),  # Input field for password

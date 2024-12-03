@@ -2,6 +2,7 @@ import os
 import re
 import pandas as pd
 import numpy as np
+from scipy.stats import skew, kurtosis
 import requests
 from datetime import date, datetime, timedelta
 import gdelt # for gdelt searchs
@@ -171,7 +172,7 @@ class gkg_operator:
         self.vectorized_df = vectorized_df
 
     def get_fields_stats(self, weight='boolean'):
-        # First, call vectorize_field to populate self.vectorized_df
+        # Ensure vectorized data exists
         if self.vectorized_df is None:
             self.vectorize_field(weight=weight)
         
@@ -181,51 +182,93 @@ class gkg_operator:
         non_zero.sort_values(ascending=False, inplace=True)
         non_zero_top_10 = non_zero[:10]
         
-        # Calculate average weighted values if weight is 'weighted'
+        # Initialize additional stats
+        mean_weighted_top_10 = None
+        mean_weighted_all_top_10 = None
+        
         if weight == 'weighted':
+            # Mean across non-zero values
             mean_weighted_values = self.vectorized_df[self.vectorized_df != 0].mean()
             mean_weighted_values = mean_weighted_values[mean_weighted_values > 0]
             mean_weighted_values.sort_values(ascending=False, inplace=True)
             mean_weighted_top_10 = mean_weighted_values[:10]
-        else:
-            mean_weighted_top_10 = None
+
+            # Mean across all values (including zeros)
+            mean_weighted_all = self.vectorized_df.mean()
+            mean_weighted_all = mean_weighted_all[mean_weighted_all > 0]
+            mean_weighted_all.sort_values(ascending=False, inplace=True)
+            mean_weighted_all_top_10 = mean_weighted_all[:10]
         
-        # Print the results in a table format
-        print("Top 10 Tokens by Non-Zero Percentage")
+        # Print results
+        print("    Top 10 Tokens by Non-Zero Percentage")
         print(non_zero_top_10.to_frame(name="Non-Zero Percentage"))
         
         if mean_weighted_top_10 is not None:
-            print("\nTop 10 Tokens by Mean Weighted Value")
-            print(mean_weighted_top_10.to_frame(name="Mean Weighted Value"))
+            print("\nTop 10 Tokens by Mean Weighted Value (Non-Zero Only)")
+            print(mean_weighted_top_10.to_frame(name="Mean Weighted Value (Non-Zero)"))
+        
+        if mean_weighted_all_top_10 is not None:
+            print("\nTop 10 Tokens by Mean Weighted Value (Including Zeros)")
+            print(mean_weighted_all_top_10.to_frame(name="Mean Weighted Value (All)"))
 
 
-
-    # def vectorize_field(self, weight = 'boolean'):
-    #     df = self.parsed_fields_df.copy()
-    #     # if col name contains 'amounts' set col_idx to 2, otherwise set to 1
-    #     if self.parsed_field_name == 'amounts':
-    #         col_idx = 2
-    #     else:
-    #         col_idx = 1
-    #     # change dtype object to float
-    #     df = df.apply(pd.to_numeric, errors='ignore')
-    #     df.iloc[:,col_idx] = df.iloc[:,col_idx].astype(str).str.lower()
-    #     ## remove all non [0-9] and [a-z] characters except for whitespace
-    #     df.iloc[:,col_idx] = df.iloc[:,col_idx].str.replace(r'[^a-z0-9\s]', '', regex=True)
-    #     # get field tokens
-    #     self.tokenize_field(data=df,col_idx=col_idx)
-    #     # initialize a new dataframe
-    #     rows = self.gkg_query.shape[0]
-    #     vectorized_df = pd.DataFrame(np.zeros((rows, len(self.field_tokens))), columns=self.field_tokens)
-    #     #using a group by is faster than the loop above.
-    #     df['token'] = df.iloc[:, col_idx]  # Use `col_idx` to get tokens from df into a new 'token' column
-    #     # Use groupby to count occurrences of each token for each index
-    #     counted_tokens = df.groupby(['index', 'token']).size().unstack(fill_value=0)
-    #     # Align counted tokens DataFrame with vectorized_df by reindexing
-    #     aligned_tokens = vectorized_df.reindex(counted_tokens.index).fillna(0) + counted_tokens.reindex_like(vectorized_df).fillna(0)
-    #     # Replace vectorized_df with the result, or create a new DataFrame if preferred
-    #     vectorized_df.update(aligned_tokens)
-    #     self.vectorized_df = vectorized_df
+    def calculate_token_stats(self, weight='boolean'):
+        if self.vectorized_df is None:
+            print('Please vectorize the field before calculating token statistics')
+            return
+        
+        vectorized_df = self.vectorized_df.copy()
+        
+        # Token frequency (total count)
+        token_frequency = vectorized_df.sum(axis=0)
+        
+        # Non-zero percentage (sparsity complement)
+        token_non_zero_percentage = (vectorized_df.astype(bool).sum(axis=0) / vectorized_df.shape[0]) * 100
+        
+        # Variance and standard deviation
+        token_variance = vectorized_df.var(axis=0)
+        token_std_dev = vectorized_df.std(axis=0)
+        
+        # Maximum and minimum token weight
+        token_max = vectorized_df.max(axis=0)
+        token_min = vectorized_df.min(axis=0)
+        
+        # Inverse Document Frequency (IDF)
+        N = vectorized_df.shape[0]
+        document_frequency = vectorized_df.astype(bool).sum(axis=0)
+        token_idf = np.log(N / (document_frequency + 1))
+        
+        # Skewness and Kurtosis
+        token_skewness = vectorized_df.apply(skew, axis=0)
+        token_kurtosis = vectorized_df.apply(kurtosis, axis=0)
+        
+        # Mean Weighted Value (Non-Zero Only)
+        if weight == 'weighted':
+            mean_weighted_values = vectorized_df[vectorized_df != 0].mean(axis=0)
+            mean_weighted_all = vectorized_df.mean(axis=0)
+        else:
+            mean_weighted_values = pd.Series([np.nan] * vectorized_df.shape[1], index=vectorized_df.columns)
+            mean_weighted_all = pd.Series([np.nan] * vectorized_df.shape[1], index=vectorized_df.columns)
+        
+        # Combine all stats into a single DataFrame
+        token_stats_df = pd.DataFrame({
+            'Frequency': token_frequency,
+            'NonZeroPercentage': token_non_zero_percentage,
+            'Variance': token_variance,
+            'StdDev': token_std_dev,
+            'MaxWeight': token_max,
+            # 'MinWeight': token_min,
+            'IDF': token_idf,
+            # 'Skewness': token_skewness,
+            # 'Kurtosis': token_kurtosis,
+            'MeanWeightedNonZero': mean_weighted_values,
+            'MeanWeightedAll': mean_weighted_all,
+        })
+        
+        # Sort by frequency for convenience
+        token_stats_df.sort_values(by='Frequency', ascending=False, inplace=True)
+        self.token_stats = token_stats_df
+        # return token_stats_df
 
 
     #####################################

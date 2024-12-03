@@ -145,7 +145,7 @@ h1.dashboard-title {
 #offcanvas-nav {
     width: 15%; /* 15% of the viewport width */
     z-index: 3001; /* Bring to the front by setting a high z-index */
-    font-size: 16px;
+    font-size: 22px;
 }
 #offcanvas-nav .nav-link {
     font-size: 20px; /* Adjust the font size specifically for navigation links */
@@ -154,6 +154,15 @@ h1.dashboard-title {
 #offcanvas-nav h3 {
     font-size: 46px; /* Adjust the font size for the heading */
     align-items: center;/* Center Text*/
+}
+
+/* Styling input fields inside the offcanvas-nav */
+#offcanvas-nav input {
+    border-radius: 10px; /* Round the corners of the input fields */
+    margin-bottom: 10px; /* Vertical separation between input fields */
+    padding: 10px; /* Add some padding inside the input fields */
+    width: 100%; /* Make the input fields take full width */
+    font-size: 22px; /* Adjust the font size for input fields */
 }
 
 

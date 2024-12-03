@@ -20,6 +20,8 @@ gkg = gkg_operator() # create a gkg operator
 manga = pd.read_csv('data\\manga_soup_labeled.csv')
 manga = manga[manga['sourcecommonname'].map(manga['sourcecommonname'].value_counts()) > 5]
 manga = manga[manga['sharingimage'].notnull()]
+# drop sourcecommonname records for 'fandompost.com'
+manga = manga[manga['sourcecommonname'] != 'fandompost.com']
 gkg.get_gkg(data=manga) # stores in gkg.gkg_query as a dataframe
 gkg.parse_urls()
 # Set up images sample from manga sharingimage for rows in manga.
@@ -103,4 +105,4 @@ handle_logout(app)
 
 # Run the app
 if __name__ == '__main__':
-    app.run_server(host="0.0.0.0", port=8053, debug=True)
+    app.run_server(host="0.0.0.0", port=8053, debug=False)
