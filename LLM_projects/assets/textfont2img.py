@@ -50,7 +50,7 @@ def text_to_image(text, font_path, font_size=50, text_color=(255, 255, 255), bg_
 
 # Example usage
 if __name__ == "__main__":
-    text = "Beautifulsoup"
+    text = "Thank You!"
     font_path = r"C:\Users\Corey Dearing\Desktop\gdelt\LLM_projects\assets\one_piece_font.ttf"  # Absolute path to your font
-    output_image = text_to_image(text, font_path, font_size=120, text_color=(0, 0, 0), output_path="assets/beautifulsouptext.png")
+    output_image = text_to_image(text, font_path, font_size=120, text_color=(0, 0, 0), output_path="assets/thankstext.png")
     # output_image.show()  # Show the image if no output_path is specified
