@@ -259,8 +259,8 @@ class gkg_operator:
             'MaxWeight': token_max,
             # 'MinWeight': token_min,
             'IDF': token_idf,
-            # 'Skewness': token_skewness,
-            # 'Kurtosis': token_kurtosis,
+            'Skewness': token_skewness,
+            'Kurtosis': token_kurtosis,
             'MeanWeightedNonZero': mean_weighted_values,
             'MeanWeightedAll': mean_weighted_all,
         })
