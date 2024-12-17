@@ -4,7 +4,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.manifold import TSNE
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import plotly.express as px
-from dash import html, register_page, dcc, Input, Output, State, callback
+from dash import html, register_page, dcc, Input, Output, State, callback, dash_table
 import dash_bootstrap_components as dbc
 import dash_table
 import json

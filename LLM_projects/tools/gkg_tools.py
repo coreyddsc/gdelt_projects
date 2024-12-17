@@ -108,7 +108,7 @@ class gkg_operator:
                 parsed_rows.append([idx] + f)
         if field == 'v2tone':
             col_names = ['index','Tone','Positive Score', 'Negative Score', 'Polarity',
-                          'Activity Reference Density', 'Self/Group Reference Density', 'Word Count']
+                        'Activity Reference Density', 'Self/Group Reference Density', 'Word Count']
         else:
             # Dynamically create column names based on length of `f`
             col_names = ['index'] + [f'{field}_{i}' for i in range(len(parsed_rows[0]) - 1)]
@@ -306,8 +306,8 @@ class gkg_operator:
                 self.header_text.append(h.get_text())
         if verbose:
             print(f'Length of Header List: {len(self.header_text)}'
-                  f'\nFirst Header: {self.header_text[0]}'
-                  f'\nLast Header: {self.header_text[-1]}')
+                f'\nFirst Header: {self.header_text[0]}'
+                f'\nLast Header: {self.header_text[-1]}')
 
 
     # Define start and end markers
@@ -354,8 +354,8 @@ class gkg_operator:
                 self.parsed_paragraphs.append(text)
         if verbose:
             print(f'Length of Paragraph List: {len(self.parsed_paragraphs)}'
-                  f'\nFirst Paragraph: {self.parsed_paragraphs[0]}'
-                  f'\nLast Paragraph: {self.parsed_paragraphs[-1]}')
+                f'\nFirst Paragraph: {self.parsed_paragraphs[0]}'
+                f'\nLast Paragraph: {self.parsed_paragraphs[-1]}')
             
 
     def parse_gkg_soup(self, url, verbose=False):
